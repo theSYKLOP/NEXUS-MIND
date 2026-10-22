@@ -138,6 +138,8 @@ async function handleUserPrompt(query) {
     createdAt: Date.now()
   };
   await saveMessage(userMsg);
+  if (!state.activeMessages) state.activeMessages = [];
+  state.activeMessages.push(userMsg);
   appendMessageToDOM(userMsg, true);
   notify('chat:updated', {});
 
@@ -180,11 +182,10 @@ async function handleUserPrompt(query) {
   // 5. Construction du Prompt Système (incorporant RAG, Web & Tolérance)
   const systemPrompt = buildSystemPrompt(contextChunks, skillContext, webContext, query);
 
-  // 6. Préparer l'historique récent (10 derniers messages)
+  // 6. Préparer l'historique récent (10 derniers messages sans doublon)
   const historyForEngine = [
     { role: 'system', content: systemPrompt },
-    ...(state.activeMessages || []).slice(-10).map(m => ({ role: m.role, content: m.content })),
-    { role: 'user', content: query }
+    ...state.activeMessages.slice(-10).map(m => ({ role: m.role, content: m.content }))
   ];
 
   // 7. Créer la bulle de réponse streaming pour l'assistant
@@ -230,8 +231,9 @@ async function handleUserPrompt(query) {
     streamingMsgObj.content = fullResponse;
     finalizeStreamingMessage(msgRow, fullResponse, contextChunks, webSources);
 
-    // Sauvegarder dans IndexedDB
+    // Sauvegarder dans IndexedDB et mettre à jour le store en mémoire
     await saveMessage(streamingMsgObj);
+    state.activeMessages.push(streamingMsgObj);
     notify('chat:updated', {});
 
   } catch (err) {

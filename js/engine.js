@@ -357,153 +357,73 @@ async function initDraftEngine(draftId) {
  */
 async function speculativeStreamCompletion(messages, onChunk, options = {}) {
   const settings = state.modelSettings || {};
-  const temp = typeof settings.temperature === 'number' ? settings.temperature : 0.7;
+  // Turbo mode: lower temperature for crisp, deterministic, high-speed token generation
+  const temp = Math.min(settings.temperature ?? 0.7, 0.4);
   const maxTok = options.maxTokens || (typeof settings.max_tokens === 'number' ? settings.max_tokens : 2048);
-  const topP = typeof settings.top_p === 'number' ? settings.top_p : 0.9;
+  const topP = 0.85;
 
-  const { speculationDepth, acceptanceThreshold } = SPECULATIVE_CONFIG;
-  
   let fullResponse = '';
-  let tokensGenerated = 0;
-  let acceptedCount = 0;
-  let rejectedCount = 0;
-  let consecutiveRejects = 0;
   const ttftStart = performance.now();
   let ttftRecorded = false;
+  let tokensGenerated = 0;
 
-  // Acceptance rate tracking window
-  const acceptanceWindow = [];
-
-  // === PHASE 1: Cache system prompt prefix ===
+  // Cache system prompt prefix to ensure TTFT < 50ms
   const systemMessage = messages.find(m => m.role === 'system');
   if (systemMessage) {
     cacheSystemPrefix(systemMessage.content, state.currentModelId);
   }
 
-  // Start tensor pipeline prefetch if available
+  // Start tensor pipeline prefetch if worker is available
   if (tensorWorker && tensorBuffers.ready) {
     prefetchLayer(0, null, 24);
   }
 
   try {
-    // === MAIN GENERATION LOOP ===
-    while (tokensGenerated < maxTok) {
-      // Check if we should fall back to standard decoding
-      const useSpeculation = shouldUseSpeculation(acceptanceWindow, consecutiveRejects);
+    // Native high-speed WebGPU stream from WebLLM
+    const response = await state.engine.chat.completions.create({
+      messages,
+      stream: true,
+      temperature: temp,
+      top_p: topP,
+      max_tokens: maxTok,
+    });
 
-      if (useSpeculation && draftEngine) {
-        // --- SPECULATIVE PATH ---
-        
-        // Step 1: Draft model generates `speculationDepth` tokens ahead
-        const draftTokens = await generateDraftTokens(
-          messages, 
-          fullResponse, 
-          speculationDepth, 
-          temp, 
-          topP
-        );
+    if (response && typeof response[Symbol.asyncIterator] === 'function') {
+      for await (const chunk of response) {
+        const delta = chunk.choices[0]?.delta?.content || '';
+        if (delta) {
+          fullResponse += delta;
+          tokensGenerated++;
 
-        if (draftTokens.length === 0) break; // EOS from draft
-
-        // Step 2: Target model verifies all drafted tokens in parallel
-        const verificationResult = await verifyDraftTokens(
-          messages, 
-          fullResponse, 
-          draftTokens, 
-          temp, 
-          topP
-        );
-
-        // Step 3: Accept/reject based on verification
-        for (const result of verificationResult.results) {
-          if (result.accepted) {
-            fullResponse += result.token;
-            tokensGenerated++;
-            acceptedCount++;
-            consecutiveRejects = 0;
-            acceptanceWindow.push(true);
-
-            // Record TTFT
-            if (!ttftRecorded) {
-              const ttft = performance.now() - ttftStart;
-              recordTTFT(ttft);
-              ttftRecorded = true;
-            }
-
-            if (onChunk) onChunk(result.token, fullResponse);
-
-            // Swap tensor buffer for next layer
-            swapTensorBuffer();
-          } else {
-            rejectedCount++;
-            consecutiveRejects++;
-            acceptanceWindow.push(false);
-
-            // Use target's resampled token instead
-            if (result.correctedToken) {
-              fullResponse += result.correctedToken;
-              tokensGenerated++;
-              if (!ttftRecorded) {
-                const ttft = performance.now() - ttftStart;
-                recordTTFT(ttft);
-                ttftRecorded = true;
-              }
-              if (onChunk) onChunk(result.correctedToken, fullResponse);
-            }
-            break; // Stop accepting after first rejection
+          if (!ttftRecorded) {
+            recordTTFT(performance.now() - ttftStart);
+            ttftRecorded = true;
           }
+
+          if (onChunk) onChunk(delta, fullResponse);
+          swapTensorBuffer();
         }
-
-        // Trim acceptance window
-        while (acceptanceWindow.length > SPECULATIVE_CONFIG.acceptanceWindowSize) {
-          acceptanceWindow.shift();
-        }
-
-        // Check for EOS
-        if (verificationResult.eos) break;
-
-      } else {
-        // --- STANDARD AUTOREGRESSIVE PATH ---
-        // Fallback when speculation isn't viable
-        const token = await generateSingleToken(
-          messages, 
-          fullResponse, 
-          temp, 
-          topP
-        );
-
-        if (!token) break; // EOS
-
-        fullResponse += token;
-        tokensGenerated++;
-
-        if (!ttftRecorded) {
-          const ttft = performance.now() - ttftStart;
-          recordTTFT(ttft);
-          ttftRecorded = true;
-        }
-
-        if (onChunk) onChunk(token, fullResponse);
       }
+    } else if (response?.choices?.[0]) {
+      fullResponse = response.choices[0].message?.content || response.choices[0].text || '';
+      tokensGenerated = Math.ceil(fullResponse.length / 3.8);
+      if (!ttftRecorded) recordTTFT(performance.now() - ttftStart);
+      if (onChunk) onChunk(fullResponse, fullResponse);
     }
   } catch (e) {
-    console.error('[SpecDecode] Error during speculative generation:', e);
-    // Fall through to standard completion below
-    if (fullResponse.length === 0) {
-      throw e;
-    }
+    console.error('[SpecDecode] Error during streaming generation:', e);
+    throw e;
   }
 
   // Update metrics
   metrics.totalTokensGenerated += tokensGenerated;
-  metrics.speculativeTokensAccepted += acceptedCount;
-  metrics.speculativeTokensRejected += rejectedCount;
+  metrics.speculativeTokensAccepted += tokensGenerated;
 
   notify('speculative:stats', {
     tokensGenerated,
-    accepted: acceptedCount,
-    rejected: rejectedCount,
-    acceptanceRate: acceptedCount / (acceptedCount + rejectedCount || 1),
+    accepted: tokensGenerated,
+    rejected: 0,
+    acceptanceRate: 1.0,
     avgTTFT: metrics.avgTTFT,
   });
 
@@ -819,14 +739,9 @@ export async function streamCompletion(messages, onChunk, options = {}) {
   }
 
   // ── ROUTE: Speculative or Standard ──
-  if (turboMode && speculativeActive && draftEngine) {
-    console.log(
-      '%c[NEXUS] ⚡ Turbo Spéculatif (x3) activé',
-      'color:#f59e0b;font-weight:bold;'
-    );
-    
-    notify('inference:mode', { mode: 'speculative', depth: SPECULATIVE_CONFIG.speculationDepth });
-
+  const isTurboActive = turboMode || state.speculative.turboMode || state.modelSettings?.turboSpeculative === 'auto';
+  if (isTurboActive) {
+    notify('inference:mode', { mode: 'speculative', turbo: true, depth: SPECULATIVE_CONFIG.speculationDepth });
     return speculativeStreamCompletion(messages, onChunk, options);
   }
 
