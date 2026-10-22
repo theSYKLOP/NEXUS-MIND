@@ -1,0 +1,350 @@
+/* ==========================================================================
+   NEXUS-MIND — ARTIFACTS DOCK PANEL (Claude Desktop Style)
+   ========================================================================== */
+
+/* Artifacts Panel Container */
+.artifacts-panel {
+  width: 480px;
+  min-width: 480px;
+  max-width: 60%;
+  height: 100%;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: width var(--transition-normal), transform var(--transition-normal);
+  z-index: 25;
+}
+
+.artifacts-panel.collapsed {
+  width: 0;
+  min-width: 0;
+  transform: translateX(100%);
+  border-left-color: transparent;
+  pointer-events: none;
+}
+
+.artifacts-panel.maximized {
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+}
+
+/* Artifacts Header */
+.artifacts-header {
+  height: 52px;
+  min-height: 52px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-surface-elevated);
+}
+
+.artifacts-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.artifacts-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--claude-accent-subtle);
+  color: var(--claude-accent);
+  border: 1px solid var(--claude-border);
+}
+
+.artifacts-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.artifacts-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Tabs Bar */
+.artifacts-tabs-bar {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  gap: 4px;
+  overflow-x: auto;
+}
+
+.artifact-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.artifact-tab-btn:hover {
+  color: var(--text-main);
+  background: var(--bg-surface-hover);
+}
+
+.artifact-tab-btn.active {
+  background: var(--bg-surface-elevated);
+  color: #fff;
+  border-color: var(--border-medium);
+  box-shadow: var(--shadow-sm);
+}
+
+.artifact-tab-btn .tab-badge {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+}
+
+/* Content Container for Each Tab */
+.artifacts-body {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.artifact-tab-pane {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.artifact-tab-pane.active {
+  display: flex;
+}
+
+/* TAB 1: Cytoscape Graphify */
+.graph-tab-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: #090a0f;
+}
+
+.graph-toolbar {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-surface);
+}
+
+.graph-stats {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+#cy {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+}
+
+/* TAB 2: Sandbox & Diffs */
+.sandbox-tab-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 14px;
+  gap: 14px;
+}
+
+.sandbox-section-card {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sandbox-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.file-tree-container {
+  background: #0d0e12;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  max-height: 180px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
+/* Diff Viewer */
+.diff-viewer-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.diff-card {
+  background: #0e0f14;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.diff-card-header {
+  padding: 6px 10px;
+  background: #15171e;
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--gemini-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.diff-lines-wrapper {
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  overflow-x: auto;
+}
+
+.diff-line-add {
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+.diff-line-del {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  text-decoration: line-through;
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+.diff-card-actions {
+  padding: 8px 10px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Terminal Agent Log */
+.agent-terminal {
+  background: #090a0d;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #94a3b8;
+  height: 100px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
+/* TAB 3: Knowledge Library */
+.kb-tab-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 14px;
+  gap: 14px;
+}
+
+.kb-document-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+}
+
+.kb-doc-source {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* TAB 4: Skills & Plugins */
+.skills-tab-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 14px;
+  gap: 12px;
+}
+
+.skill-card {
+  padding: 10px 12px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.skill-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  color: #38bdf8;
+}
+
+.skill-desc {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}

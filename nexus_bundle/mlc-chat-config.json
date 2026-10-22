@@ -1,0 +1,11 @@
+{
+  "model_type": "qwen2.5-0.5b-instruct",
+  "quantization": "q4f16_1",
+  "model_lib": "Qwen2.5-0.5B-Instruct-q4f16_1-webgpu.wasm",
+  "temperature": 0.4,
+  "repetition_penalty": 1.1,
+  "top_p": 0.9,
+  "conv_template": "qwen2",
+  "context_window_size": 4096,
+  "prefill_chunk_size": 1024
+}

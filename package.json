@@ -1,0 +1,20 @@
+{
+  "name": "nexus-mind",
+  "version": "2.2.0",
+  "description": "NEXUS-MIND // Studio IA Local-First WebGPU & Tri-Hybrid Speculative Matrix",
+  "type": "module",
+  "scripts": {
+    "dev": "python -m http.server 8080",
+    "serve": "npx serve -p 8080"
+  },
+  "keywords": [
+    "webgpu",
+    "webllm",
+    "speculative-decoding",
+    "local-ai",
+    "rag",
+    "indexeddb"
+  ],
+  "author": "theSYKLOP",
+  "license": "MIT"
+}

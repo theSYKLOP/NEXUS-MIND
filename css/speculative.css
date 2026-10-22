@@ -1,0 +1,397 @@
+/* ==========================================================================
+   NEXUS-MIND — SPECULATIVE ENGINE CSS
+   Styling for the Tri-Hybrid Speculative Matrix UI components:
+   - Turbo Speculative badge & toggle
+   - Tensor pipeline status indicator
+   - KV-Cache INT4 monitoring
+   - Prefix cache status
+   - Speculative mode overlay effects
+   ========================================================================== */
+
+/* ─── Turbo Speculative Badge (Navbar) ─── */
+
+.badge-turbo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  user-select: none;
+}
+
+.badge-turbo.inactive {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.badge-turbo.inactive:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.badge-turbo.active {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(249, 115, 22, 0.18) 100%);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.12), inset 0 0 12px rgba(245, 158, 11, 0.06);
+  animation: turbo-glow 2s ease-in-out infinite alternate;
+}
+
+.badge-turbo.active:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(249, 115, 22, 0.25) 100%);
+  box-shadow: 0 0 18px rgba(245, 158, 11, 0.2), inset 0 0 14px rgba(245, 158, 11, 0.1);
+}
+
+.badge-turbo.unavailable {
+  background: rgba(239, 68, 68, 0.08);
+  color: rgba(248, 113, 113, 0.5);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.badge-turbo .turbo-icon {
+  display: inline-flex;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+
+.badge-turbo.active .turbo-icon {
+  animation: turbo-zap 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes turbo-glow {
+  0% { box-shadow: 0 0 12px rgba(245, 158, 11, 0.12), inset 0 0 12px rgba(245, 158, 11, 0.06); }
+  100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.2), inset 0 0 16px rgba(245, 158, 11, 0.1); }
+}
+
+@keyframes turbo-zap {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* ─── Tensor Pipeline Status ─── */
+
+.tensor-pipeline-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  font-size: 9.5px;
+  font-weight: 500;
+  font-family: var(--font-mono);
+  letter-spacing: 0.3px;
+}
+
+.tensor-pipeline-indicator.active {
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.tensor-pipeline-indicator.inactive {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tensor-pipeline-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.tensor-pipeline-indicator.active .tensor-pipeline-dot {
+  animation: pipeline-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pipeline-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* ─── Speculative Stats Overlay (shown during inference) ─── */
+
+.speculative-stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 14px;
+  background: rgba(15, 16, 21, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(8px);
+  font-size: 10.5px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  transition: all var(--transition-normal);
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+}
+
+.speculative-stats-bar.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.spec-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.spec-stat .stat-label {
+  color: var(--text-muted);
+  font-size: 9.5px;
+}
+
+.spec-stat .stat-value {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.spec-stat .stat-value.good {
+  color: #34d399;
+}
+
+.spec-stat .stat-value.warn {
+  color: #fbbf24;
+}
+
+.spec-stat .stat-value.bad {
+  color: #f87171;
+}
+
+.spec-stat-divider {
+  width: 1px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ─── Speculative Mode Toggle in Settings Modal ─── */
+
+.speculative-settings-card {
+  background: rgba(245, 158, 11, 0.04);
+  border: 1px solid rgba(245, 158, 11, 0.12);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-top: 8px;
+}
+
+.speculative-settings-card .spec-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.speculative-settings-card .spec-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #fbbf24;
+}
+
+.speculative-settings-card .spec-card-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.speculative-settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.spec-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.spec-detail-label {
+  font-size: 9.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.spec-detail-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+  font-family: var(--font-mono);
+}
+
+/* ─── KV-Cache INT4 Badge ─── */
+
+.badge-kv-int4 {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  font-size: 9.5px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  background: rgba(144, 97, 249, 0.12);
+  color: #a78bfa;
+  border: 1px solid rgba(144, 97, 249, 0.2);
+  letter-spacing: 0.3px;
+}
+
+/* ─── Prefix Cache Hit Indicator ─── */
+
+.prefix-cache-hit {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 9px;
+  font-weight: 500;
+  background: rgba(16, 185, 129, 0.08);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  animation: prefix-flash 0.4s ease-out;
+}
+
+@keyframes prefix-flash {
+  0% { background: rgba(16, 185, 129, 0.25); }
+  100% { background: rgba(16, 185, 129, 0.08); }
+}
+
+/* ─── MoE Expert Routing Badge ─── */
+
+.badge-moe {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  font-size: 9.5px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  background: rgba(14, 165, 233, 0.1);
+  color: #38bdf8;
+  border: 1px solid rgba(14, 165, 233, 0.2);
+}
+
+.badge-moe .expert-indicator {
+  display: flex;
+  gap: 2px;
+}
+
+.badge-moe .expert-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.4);
+}
+
+.badge-moe .expert-dot.active {
+  background: #38bdf8;
+  box-shadow: 0 0 4px rgba(56, 189, 248, 0.5);
+}
+
+/* ─── Speculative Decoding Active Glow Effect on Chat ─── */
+
+.chat-messages-scroll.turbo-active {
+  position: relative;
+}
+
+.chat-messages-scroll.turbo-active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(245, 158, 11, 0.4) 20%, 
+    rgba(249, 115, 22, 0.6) 50%, 
+    rgba(245, 158, 11, 0.4) 80%, 
+    transparent 100%
+  );
+  z-index: 10;
+  animation: turbo-beam 2s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes turbo-beam {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ─── Hardware Profile Display ─── */
+
+.hw-profile-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 8px;
+}
+
+.hw-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hw-chip .chip-icon {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+/* ─── Responsive: Stack stats on mobile ─── */
+
+@media (max-width: 768px) {
+  .speculative-stats-bar {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 10px;
+    font-size: 9px;
+  }
+
+  .speculative-settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .badge-turbo {
+    font-size: 9px;
+    padding: 2px 7px;
+  }
+}

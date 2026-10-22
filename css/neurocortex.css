@@ -1,0 +1,503 @@
+/* ==========================================================================
+   NEXUS-MIND — NEUROCORTEX DESIGN SYSTEM
+   Custom Model Selector, Distillation Badges, Phase Indicators,
+   NeuroCortex Animations & Neural Visual Effects
+   ========================================================================== */
+
+/* ============================================================================
+   1. CUSTOM MODEL SELECTOR DROPDOWN
+   ============================================================================ */
+
+.model-selector-custom {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+  min-width: 180px;
+}
+
+.model-selector-custom:hover {
+  border-color: var(--gemini-primary);
+  background: var(--bg-surface-hover);
+}
+
+.model-selector-custom.active {
+  border-color: var(--gemini-primary);
+  box-shadow: 0 0 0 2px rgba(78, 117, 246, 0.2), var(--shadow-glow);
+}
+
+/* Selected Display */
+.model-selected-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.model-selected-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.model-selector-chevron {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+  transition: transform var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.model-selector-custom.active .model-selector-chevron {
+  transform: rotate(180deg);
+  color: var(--gemini-primary);
+}
+
+
+/* ============================================================================
+   2. DROPDOWN PANEL
+   ============================================================================ */
+
+.model-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 420px;
+  max-height: 0;
+  overflow: hidden;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg), 0 0 40px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: all 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  pointer-events: none;
+}
+
+.model-dropdown-panel.open {
+  max-height: 500px;
+  opacity: 1;
+  transform: translateY(0);
+  padding: 6px;
+  overflow-y: auto;
+  pointer-events: auto;
+}
+
+
+/* ============================================================================
+   3. DROPDOWN ITEMS
+   ============================================================================ */
+
+.model-dropdown-item {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+  margin-bottom: 2px;
+}
+
+.model-dropdown-item:last-child {
+  margin-bottom: 0;
+}
+
+.model-dropdown-item:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--border-subtle);
+}
+
+.model-dropdown-item.selected {
+  background: rgba(78, 117, 246, 0.08);
+  border-color: rgba(78, 117, 246, 0.25);
+}
+
+.model-dropdown-item.selected:hover {
+  background: rgba(78, 117, 246, 0.14);
+}
+
+.model-item-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.model-item-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.model-item-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.model-item-detail {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.model-item-stats {
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  margin-top: 2px;
+  letter-spacing: 0.2px;
+}
+
+.model-item-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.model-item-rec {
+  font-size: 9.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gemini-primary);
+  padding: 2px 6px;
+  border-radius: var(--radius-pill);
+  background: rgba(78, 117, 246, 0.1);
+  border: 1px solid rgba(78, 117, 246, 0.25);
+}
+
+.model-item-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+}
+
+.model-item-status.ready {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.model-item-status.loading {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  animation: pulse-subtle 1.5s infinite;
+}
+
+
+/* ============================================================================
+   4. DISTILLATION BADGES (Shown in dropdown & selected display)
+   ============================================================================ */
+
+.model-distill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* Quantized (Q4) - Orange/Amber */
+.badge-quant {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Distilled (NC) - Cyan/Teal */
+.badge-distill {
+  color: #22d3ee;
+  background: rgba(34, 211, 238, 0.12);
+  border: 1px solid rgba(34, 211, 238, 0.3);
+}
+
+/* Optimized (NC+) - Purple/Violet */
+.badge-optimized {
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  box-shadow: 0 0 10px rgba(167, 139, 250, 0.15);
+}
+
+/* Sovereign (SOV) - Gradient Gold+Green — Full pipeline, highest tier */
+.badge-sovereign {
+  color: #34d399;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(78, 117, 246, 0.12) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.15), 0 0 20px rgba(78, 117, 246, 0.08);
+}
+
+
+/* ============================================================================
+   5. NEUROCORTEX LOADING PHASE BADGES (Navbar status)
+   ============================================================================ */
+
+.badge-nc {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.badge-phase-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.badge-phase-label {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Phase Colors */
+.badge-nc-warn {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.badge-nc-info {
+  background: rgba(14, 165, 233, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
+.badge-nc-purple {
+  background: rgba(147, 51, 234, 0.12);
+  color: #c084fc;
+  border: 1px solid rgba(147, 51, 234, 0.3);
+}
+
+.badge-nc-cyan {
+  background: rgba(6, 182, 212, 0.12);
+  color: #22d3ee;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+.badge-nc-amber {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-nc-ok {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.badge-nc-err {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* Glow effect */
+.badge-glow {
+  box-shadow: 0 0 20px var(--badge-glow-color, rgba(78, 117, 246, 0.15));
+}
+
+.badge-nc-info.badge-glow    { --badge-glow-color: rgba(14, 165, 233, 0.2); }
+.badge-nc-purple.badge-glow  { --badge-glow-color: rgba(147, 51, 234, 0.2); }
+.badge-nc-cyan.badge-glow    { --badge-glow-color: rgba(6, 182, 212, 0.25); }
+.badge-nc-amber.badge-glow   { --badge-glow-color: rgba(245, 158, 11, 0.2); }
+
+/* Progress bar inside badge */
+.badge-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 0 0 var(--radius-pill) var(--radius-pill);
+  overflow: hidden;
+}
+
+.badge-progress-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: currentColor;
+  transition: width 300ms ease-out;
+}
+
+
+/* ============================================================================
+   6. NEUROCORTEX ANIMATIONS
+   ============================================================================ */
+
+/* Neural Pulse — Used for distillation phase */
+@keyframes neuron-pulse {
+  0%, 100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  25% {
+    opacity: 0.7;
+    filter: brightness(1.3);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(0.9);
+  }
+  75% {
+    opacity: 0.8;
+    filter: brightness(1.2);
+  }
+}
+
+@keyframes neuron-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(34, 211, 238, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.5), 0 0 40px rgba(78, 117, 246, 0.2);
+  }
+}
+
+@keyframes bounce-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.animate-neuron {
+  animation: neuron-pulse 1.8s ease-in-out infinite;
+}
+
+.animate-bounce {
+  animation: bounce-soft 1.2s ease-in-out infinite;
+}
+
+.animate-pulse {
+  animation: pulse-subtle 1.5s ease-in-out infinite;
+}
+
+/* Shimmer effect for sovereign badges */
+.badge-sovereign {
+  background-size: 200% 100%;
+  background-image: linear-gradient(
+    90deg,
+    rgba(16, 185, 129, 0.12) 0%,
+    rgba(78, 117, 246, 0.18) 25%,
+    rgba(167, 139, 250, 0.12) 50%,
+    rgba(78, 117, 246, 0.18) 75%,
+    rgba(16, 185, 129, 0.12) 100%
+  );
+  animation: shimmer 4s linear infinite;
+}
+
+
+/* ============================================================================
+   7. NEUROCORTEX STATUS PANEL (in-nav detail indicator)
+   ============================================================================ */
+
+.nc-status-detail {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nc-status-detail .badge-nc {
+  font-size: 10.5px;
+  padding: 3px 8px;
+}
+
+/* Phase substep indicator (shown during distillation) */
+.nc-substep-indicator {
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-style: italic;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* ============================================================================
+   8. RESPONSIVE ADJUSTMENTS
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .model-selector-custom {
+    min-width: 140px;
+  }
+
+  .model-dropdown-panel {
+    min-width: 320px;
+    left: -20px;
+  }
+
+  .model-selected-label {
+    font-size: 12px;
+    max-width: 100px;
+  }
+
+  .badge-phase-label {
+    max-width: 140px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .model-dropdown-panel {
+    min-width: calc(100vw - 40px);
+    left: -10px;
+    right: -10px;
+  }
+
+  .model-selected-label {
+    max-width: 80px;
+  }
+}
