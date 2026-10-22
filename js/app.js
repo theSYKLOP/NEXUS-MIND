@@ -10,8 +10,9 @@ import { registerSkill, runSkills } from './skills.js?v=2.1';
 import { initSidebar } from './components/sidebar.js?v=2.1';
 import { initPromptBar } from './components/prompt-bar.js?v=2.1';
 import { initArtifactsPanel, showDiff, agentLog, toggleArtifactsPanel } from './components/artifacts-panel.js?v=2.1';
-import { initChatView, appendMessageToDOM, updateStreamingMessage, finalizeStreamingMessage, loadConversationMessages } from './components/chat-view.js?v=2.1';
+import { initChatView, appendMessageToDOM, updateStreamingMessage, finalizeStreamingMessage, loadConversationMessages } from './components/chat-view.js?v=2.2';
 import { initGraphView } from './components/graph-view.js?v=2.1';
+import { createThinkingTrace, THINKING_STAGE } from './components/thinking-trace.js';
 import { initModelSelector, buildPhaseBadge } from './components/model-selector.js?v=2.1';
 import { loadModelWithNeuroCortex, registry, MODEL_PHASE, DISTILL_LEVEL, BADGE_CONFIG } from './neural-distill.js?v=2.1';
 import { initModelSettingsModal, updateNavbarToleranceBadge } from './components/model-settings-modal.js?v=2.1';
@@ -146,10 +147,35 @@ async function handleUserPrompt(query) {
   state.isGenerating = true;
   updatePromptSendState(true);
 
+  // 7a. Create the assistant message row early so the thinking trace attaches to it
+  const streamingMsgObj = {
+    conversationId: state.currentConversationId,
+    role: 'assistant',
+    content: '…',
+    ragSources: [],
+    webSources: [],
+    createdAt: Date.now()
+  };
+  const msgRow = appendMessageToDOM(streamingMsgObj, true);
+
+  // 7b. Create the thinking trace (Qwen / Claude-style reasoning breadcrumb)
+  let thinkingTrace = null;
+  if (msgRow && msgRow.body) {
+    thinkingTrace = createThinkingTrace(msgRow.body);
+    thinkingTrace.setStage(THINKING_STAGE.THINKING, 'En train de réfléchir');
+  }
+
   // 2. RAG Retrieval (si activé)
   let contextChunks = [];
   if (state.ragEnabled) {
+    if (thinkingTrace) {
+      thinkingTrace.setStage(THINKING_STAGE.RAG_LOOKUP, 'Consultation de la base locale');
+      thinkingTrace.addStep('Recherche dans les documents indexés (TF-IDF)', THINKING_STAGE.RAG_LOOKUP);
+    }
     contextChunks = await retrieveContext(query, 5);
+    if (thinkingTrace && contextChunks.length > 0) {
+      thinkingTrace.addStep(`${contextChunks.length} chunk${contextChunks.length > 1 ? 's' : ''} pertinent${contextChunks.length > 1 ? 's' : ''} trouvé${contextChunks.length > 1 ? 's' : ''}`, THINKING_STAGE.COMPLETED);
+    }
   }
 
   // 3. Recherche Web Open Source (si activé ou si RAG local vide + question ouverte)
@@ -160,11 +186,18 @@ async function handleUserPrompt(query) {
 
   if (shouldSearch) {
     try {
+      if (thinkingTrace) {
+        thinkingTrace.setStage(THINKING_STAGE.WEB_SEARCH, 'Recherche web en cours');
+        thinkingTrace.addStep(`Requête encyclopédique : "${query.slice(0, 50)}${query.length > 50 ? '…' : ''}"`, THINKING_STAGE.WEB_SEARCH);
+      }
       agentLog(`[WebSearch] Recherche encyclopédique en direct pour : "${query.slice(0, 40)}…"`);
       webSources = await searchWeb(query);
       if (webSources.length > 0) {
         webContext = formatWebContext(webSources);
         agentLog(`[WebSearch] ${webSources.length} sources web extraites (Wikipédia/Live)`);
+        if (thinkingTrace) {
+          thinkingTrace.addStep(`${webSources.length} source${webSources.length > 1 ? 's' : ''} web trouvée${webSources.length > 1 ? 's' : ''}`, THINKING_STAGE.COMPLETED);
+        }
       }
     } catch (e) {
       console.warn('Web search error:', e);
@@ -174,6 +207,9 @@ async function handleUserPrompt(query) {
   // 4. Exécution des Skills / Plugins
   let skillContext = '';
   try {
+    if (thinkingTrace) {
+      thinkingTrace.setStage(THINKING_STAGE.TOOL_USE, 'Exécution des plugins');
+    }
     skillContext = await runSkills(query);
   } catch (e) {
     console.warn('Skills error:', e);
@@ -188,16 +224,14 @@ async function handleUserPrompt(query) {
     ...state.activeMessages.slice(-10).map(m => ({ role: m.role, content: m.content }))
   ];
 
-  // 7. Créer la bulle de réponse streaming pour l'assistant
-  const streamingMsgObj = {
-    conversationId: state.currentConversationId,
-    role: 'assistant',
-    content: '…',
-    ragSources: contextChunks,
-    webSources: webSources,
-    createdAt: Date.now()
-  };
-  const msgRow = appendMessageToDOM(streamingMsgObj, true);
+  // Update rag/web sources in the message object
+  streamingMsgObj.ragSources = contextChunks;
+  streamingMsgObj.webSources = webSources;
+
+  // Switch thinking trace to generation mode
+  if (thinkingTrace) {
+    thinkingTrace.setStage(THINKING_STAGE.GENERATING, 'Génération de la réponse');
+  }
 
   let fullResponse = '';
   try {
@@ -205,6 +239,11 @@ async function handleUserPrompt(query) {
     const streamOptions = isCasual ? { maxTokens: 120 } : {};
 
     fullResponse = await streamCompletion(historyForEngine, (delta, currentFull) => {
+      // Complete the thinking trace on first token
+      if (thinkingTrace && fullResponse.length === 0 && delta.length > 0) {
+        thinkingTrace.complete('Réflexion terminée');
+        thinkingTrace = null; // Don't touch it again
+      }
       updateStreamingMessage(msgRow, currentFull);
     }, streamOptions);
 
@@ -238,9 +277,16 @@ async function handleUserPrompt(query) {
 
   } catch (err) {
     console.error('Erreur inférence:', err);
+    if (thinkingTrace) {
+      thinkingTrace.complete('Interrompu');
+    }
     fullResponse = `❌ Erreur lors de la génération : ${err.message}`;
     finalizeStreamingMessage(msgRow, fullResponse, contextChunks, webSources);
   } finally {
+    if (thinkingTrace) {
+      thinkingTrace.complete('Terminé');
+      thinkingTrace = null;
+    }
     state.isGenerating = false;
     updatePromptSendState(false);
   }

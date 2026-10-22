@@ -84,10 +84,11 @@
   flex: 1;
   overflow-y: auto;
   scroll-behavior: smooth;
-  padding: 24px 16px 120px 16px;
+  padding: 24px 16px 24px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  min-height: 0; /* Critical: allows flex child to shrink and scroll */
 }
 
 .chat-messages-inner {
@@ -474,30 +475,27 @@
   line-height: 1.5;
 }
 
-/* Floating Bottom Prompt Bar (Gemini / ChatGPT Style) */
+/* Bottom Prompt Bar (Flex in-flow — no overlap with messages) */
 .prompt-bar-wrapper {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 0 16px 18px 16px;
+  flex-shrink: 0;
+  position: relative;
+  padding: 8px 16px 14px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: linear-gradient(180deg, rgba(9, 10, 13, 0) 0%, rgba(9, 10, 13, 0.95) 30%, #090a0d 100%);
-  pointer-events: none;
+  background: var(--bg-app);
+  border-top: 1px solid var(--border-subtle);
   z-index: 25;
 }
 
 .prompt-bar-container {
   width: 100%;
   max-width: 800px;
-  pointer-events: auto;
   background: var(--bg-surface);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-xl);
   padding: 10px 14px 10px 16px;
-  box-shadow: var(--shadow-lg), 0 0 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -518,10 +516,11 @@
   font-size: 14.5px;
   line-height: 1.5;
   resize: none;
-  max-height: 200px;
+  max-height: 160px;
   min-height: 24px;
   padding: 0;
   outline: none;
+  overflow-y: auto;
 }
 
 .prompt-textarea::placeholder {

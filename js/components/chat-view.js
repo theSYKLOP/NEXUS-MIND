@@ -1,12 +1,14 @@
 /* ==========================================================================
    NEXUS-MIND — CHAT VIEW (Markdown Rendering, Highlighting, Citations)
    Zero emoji policy — Pure Lucide SVG Icons
+   With Thinking Trace & User Prompt Collapse (Qwen / ChatGPT Style)
    ========================================================================== */
 
 import { state, notify, subscribe } from '../state.js';
 import { getMessagesForConversation, saveMessage } from '../db.js';
 import { openArtifactsPanel } from './artifacts-panel.js';
 import { extractGraphData } from './graph-view.js';
+import { createThinkingTrace, setupUserPromptCollapse, THINKING_STAGE } from './thinking-trace.js';
 import ICONS from '../icons.js';
 
 export function initChatView(onSuggestionClick) {
@@ -135,7 +137,8 @@ export function appendMessageToDOM(msg, animate = true) {
   bubble.className = 'message-bubble';
 
   if (isUser) {
-    bubble.textContent = msg.content;
+    // Use collapsible prompt for long user messages
+    setupUserPromptCollapse(msg.content, bubble);
   } else {
     bubble.innerHTML = formatMarkdown(msg.content);
   }
@@ -196,6 +199,25 @@ export function appendMessageToDOM(msg, animate = true) {
       </div>
     `;
     body.appendChild(artifactCard);
+  }
+
+  // Message action bar (copy full response)
+  if (!isUser) {
+    const actionsBar = document.createElement('div');
+    actionsBar.className = 'message-actions-bar';
+    
+    const copyAllBtn = document.createElement('button');
+    copyAllBtn.className = 'message-action-btn';
+    copyAllBtn.title = 'Copier la réponse';
+    copyAllBtn.innerHTML = ICONS.copy;
+    copyAllBtn.onclick = () => {
+      navigator.clipboard.writeText(msg.content).then(() => {
+        copyAllBtn.innerHTML = ICONS.check;
+        setTimeout(() => { copyAllBtn.innerHTML = ICONS.copy; }, 2000);
+      });
+    };
+    actionsBar.appendChild(copyAllBtn);
+    body.appendChild(actionsBar);
   }
 
   if (isUser) {
@@ -298,6 +320,25 @@ export function finalizeStreamingMessage(msgRow, fullText, ragSources = [], webS
     `;
     msgRow.body.appendChild(artifactCard);
     openArtifactsPanel('graph');
+  }
+
+  // Add message action bar
+  if (!msgRow.body.querySelector('.message-actions-bar')) {
+    const actionsBar = document.createElement('div');
+    actionsBar.className = 'message-actions-bar';
+    
+    const copyAllBtn = document.createElement('button');
+    copyAllBtn.className = 'message-action-btn';
+    copyAllBtn.title = 'Copier la réponse';
+    copyAllBtn.innerHTML = ICONS.copy;
+    copyAllBtn.onclick = () => {
+      navigator.clipboard.writeText(fullText).then(() => {
+        copyAllBtn.innerHTML = ICONS.check;
+        setTimeout(() => { copyAllBtn.innerHTML = ICONS.copy; }, 2000);
+      });
+    };
+    actionsBar.appendChild(copyAllBtn);
+    msgRow.body.appendChild(actionsBar);
   }
 
   scrollToBottom();
